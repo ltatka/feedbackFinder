@@ -40,17 +40,18 @@ class Graph():
             self.adj[node.ID] = []
         # Add edges ... (?)
         for current in edges:
-            self.adj[current.source] += (current.dest, current.sign)
+            self.adj[current.source].append((current.dest, current.sign))
 
-
-
+    def printGraph(self):
+        for entry in self.adj:
+            print(f"{entry} -> {self.adj[entry]}")
 
 
 astr = '''
 
 X0 -> X1; k1*X0
 X1 -> X0; k2*X1
-X1 -> X2; k3*X1
+X1 + X2 -> X2 + X2; k3*X1*X2
 X2 -> X1; k4*X2
 X0 = 2
 X1 = 2
@@ -65,13 +66,6 @@ def getSpeciesReaction(list, ID):
     # This assumes that the ID is in the form letter-number, eg S1
     return list[int(ID[1])]
 
-# Function to print adjacency list representation of a graph
-def printGraph(graph):
-    for src in range(len(graph.adj)):
-        # print current vertex and all its neighboring vertices
-        for dest in graph.adj[src]:
-            print(f"({src} —> {dest}) ", end="")
-        print()
 
 r = te.loada(astr)
 speciesList = []
@@ -81,13 +75,12 @@ for i in range(r.getNumFloatingSpecies()):
 reactionList = []
 for i in range(r.getNumReactions()):
     reactionList.append(Reaction(f'J{i}'))
-# r.simulate()
-# r.plot()
+
 
 
 A = r.getFullStoichiometryMatrix()
 
-# Not sure that we need this:
+
 reactionlist_full = []
 lines = astr.splitlines()
 for line in lines:
@@ -113,11 +106,13 @@ edgeList = []
 species, reaction = np.shape(A)
 for j in range(reaction):
     for i in range(species):
-        if A[i, j] < 0:
-            sign = -1
-        elif A[i, j] > 0:
-            sign = 1
-        edgeList.append(Edge(reactionList[j].ID, speciesList[i].ID, sign))
+        if A[i, j] != 0:
+            if A[i, j] < 0:
+                sign = -1
+            elif A[i, j] > 0:
+                sign = 1
+            edgeList.append(Edge(reactionList[j].ID, speciesList[i].ID, sign))
+
 #2. Draw edges based on rate laws
 ## These edges will all originate from species nodes,
 ## For now, I'm going to do this only with mass action laws.
@@ -126,7 +121,10 @@ for j in range(len(reactionlist_full)):
     for r in reactionlist_full[j][0]:
         # If the reactant is in the rate law (which it will be for now with mass action)
         if r in reactionlist_full[j][2]:
-            edge = Edge(getSpeciesReaction(speciesList, r), reactionList[j], 1)
+            source = getSpeciesReaction(speciesList, r).ID
+            dest = reactionList[j].ID
+            edge = Edge(source, dest, 1)
+            edgeList.append(edge)
 
 
 
@@ -134,7 +132,19 @@ for j in range(len(reactionlist_full)):
 
 g = Graph(edgeList, speciesList + reactionList)
 
-printGraph(g)
+g.printGraph()
+
+
+
+
+
+
+
+
+
+
+
+
 
 # r = te.loada('''
 # var S0
@@ -159,24 +169,6 @@ printGraph(g)
 
 #m = r.simulate(0,1000,1000)
 #r.plot()
-
-
-
-
-for edge in edgeList:
-    edge.printEdge()
-
-
-
-
-
-
-
-
-
-
-
-
 
 # r = te.loada('''
 # var S0
