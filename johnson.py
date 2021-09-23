@@ -81,8 +81,6 @@ def simple_cycles(G):
     while sccs:
         scc = sccs.pop()  # Take a strongly connected conmponent off the list
         # ADDED BY ME: Make a subgraph of the connected component
-        if len(scc) == 1:
-            print("lol")
         subG = subgraph(G, scc)
         startnode = scc.pop()
         path=[startnode]
@@ -90,13 +88,15 @@ def simple_cycles(G):
         closed = set() #Not sure what this is
         blockedSet.add(startnode)
         blockedMap = {}
-        # if not startnode
-        print(subG)
         stack = [ (startnode,list(subG[startnode])) ]
         while stack:
             thisnode, nbrs = stack[-1] # nbrs will be a list of node tuples that thisnode connects to
             if nbrs: #If there are (still) neighbors, pop off one and check it it's the start node.
-                nextnode = nbrs.pop()[0]
+                nextnode = nbrs.pop()
+                weight = nextnode[1]
+                if weight < 0:
+                    continue
+                nextnode = nextnode[0]
                 if nextnode == startnode: # If the neighbor is the start node, then we've found a cycle.
                     allCycles.append(deepcopy(path))
                     yield path[:]
@@ -238,4 +238,4 @@ scc = strongly_connected_components(sample_g)[2]
 
 # sg = subgraph(sample_g, scc )
 # print(sg)
-print(tuple(simple_cycles(sample_g)))
+print(tuple(simple_cycles(g)))
